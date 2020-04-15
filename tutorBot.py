@@ -6,8 +6,8 @@ import pymysql
 
 bot = telebot.TeleBot("928244332:AAFXeSpQSVauw_3Efi6P_oiLkdcxjz7QK-Y")
 
-# TODO last parameter is db name
-DB = pymysql.connect('localhost', 'root', 'hr220400', 'telegramBot')
+# DB = pymysql.connect('localhost', 'root', 'hr220400', 'telegramBot')
+DB = pymysql.connect('localhost', 'root', '', 'unnamed')
 cursor = DB.cursor()
 
 
@@ -21,8 +21,7 @@ data_obj = DataCurrSession()
 
 
 def check_is_tutor_and_return_id_of_they(username):
-    # TODO add somewhere a field with tutors telegram's usernames and check SQL
-    cursor.execute('SELECT * FROM tutors')
+    cursor.execute('SELECT * FROM tutors_tg')
     usernames_from_DB = cursor.fetchall()
 
     for i in usernames_from_DB:
@@ -53,13 +52,12 @@ def start_handler(message):
 
         data_obj.tutor_id = tutor_id
 
-        # TODO check sql
         sql_to_get_groups = """
-            SELECT `groups`.name, `groups`.id
-            FROM tutor_group
-            LEFT JOIN `tutors` ON tutor_group.tutor_id = `tutors`.id
-            LEFT JOIN `groups` ON tutor_group.group_id = `groups`.id
-            WHERE tutor_group.tutor_id = {};
+            SELECT groups.id, groups.title
+            FROM tutors_tg
+            INNER JOIN group_subject ON tutors_tg.user_id = group_subject.tutor_id
+            INNER JOIN groups ON group_subject.group_id = groups.id
+            WHERE tutors_tg.user_id = {};
         """.format(tutor_id)
 
         cursor.execute(sql_to_get_groups)
@@ -67,7 +65,7 @@ def start_handler(message):
 
         keyboard_groups = types.ReplyKeyboardMarkup(row_width=3, one_time_keyboard=True)
         for group in array_of_groups:
-            group_button = types.KeyboardButton(group[0])
+            group_button = types.KeyboardButton(group[1])
             keyboard_groups.add(group_button)
 
         msg = bot.send_message(message.chat.id, 'Выберите группу:', reply_markup=keyboard_groups)
@@ -81,10 +79,10 @@ def start_handler(message):
 
 def handle_group(message):
 
-    # TODO check sql
+    # not sure it is a good way to use names instead of id
     sql_to_set_group_id = """
-    SELECT id FROM telegramBot.groups
-    WHERE name = '{}';
+    SELECT id FROM groups
+    WHERE title = '{}';
     """.format(message.text)
 
     cursor.execute(sql_to_set_group_id)
@@ -92,17 +90,18 @@ def handle_group(message):
     group_id = cursor.fetchone()
     data_obj.group_id = group_id[0]
 
-    # TODO need to get only subjects of chosen group with that tutor, but I get all subjects
     sql_to_get_subjects = """
-    SELECT * FROM subjects;
-    """
+    SELECT title, type FROM subjects
+    INNER JOIN group_subject ON subjects.id = group_subject.subject_id
+    WHERE group_subject.group_id = {} AND group_subject.tutor_id = {};
+    """.format(group_id[0], 6) # TODO how to pass tutor id here?
     cursor.execute(sql_to_get_subjects)
 
     array_of_subjects = cursor.fetchall()
 
     keyboard_subjects = types.ReplyKeyboardMarkup(row_width=2, one_time_keyboard=True)
     for subject in array_of_subjects:
-        subject_button = types.KeyboardButton(subject[1])
+        subject_button = types.KeyboardButton('{} ({})'.format(subject[0], subject[1]))
         keyboard_subjects.add(subject_button)
 
     msg = bot.send_message(message.chat.id, 'Выберите предмет:', reply_markup=keyboard_subjects)
@@ -110,19 +109,18 @@ def handle_group(message):
 
 
 def handle_subject(message):
-    # TODO check sql
     sql_to_get_subject_id = """
-    SELECT id FROM telegramBot.subjects
-    WHERE name = '{}';
+    SELECT id FROM subjects
+    WHERE CONCAT(title, ' (', type, ')') = '{}';
     """.format(message.text)
     cursor.execute(sql_to_get_subject_id)
     subject_id = cursor.fetchone()
     data_obj.subject_id = subject_id[0]
 
-    # TODO need to add WHERE group_id and subject_id
     sql_to_get_students = """
-    SELECT * FROM telegramBot.students;
-    """
+    SELECT id, lastname, firstname FROM students
+    WHERE group_id = {};
+    """.format(1) # TODO how to pass group_id here?
     cursor.execute(sql_to_get_students)
     array_of_students = cursor.fetchall()
 
@@ -133,11 +131,10 @@ def handle_subject(message):
 
             answer = True if (message.text == 'Есть') else False
 
-            # TODO check SQL
+            # TODO inserting correct current time
             sql_to_insert_to_journal = """
             INSERT INTO journals (student_id, subject_id, value, created_at, updated_at)
-            VALUES
-            ({}, {}, {}, '0000-00-00 00:00:00', '0000-00-00 00:00:00')
+            VALUES ({}, {}, {}, '2020-04-16 00:00:00', '2020-04-16 00:00:00')
             """.format(data_obj.curr_student_id, data_obj.subject_id, answer)
 
             try:
@@ -159,7 +156,7 @@ def handle_subject(message):
         btn_is = types.KeyboardButton('Есть')
         btn_absent = types.KeyboardButton('Нет')
         keyboard_student.row(btn_is, btn_absent)
-        msg = bot.send_message(message.chat.id, array_of_students[i][1], reply_markup=keyboard_student)
+        msg = bot.send_message(message.chat.id, array_of_students[i][1]+' '+array_of_students[i][2], reply_markup=keyboard_student)
         data_obj.curr_student_id = array_of_students[i][0]
 
         bot.register_next_step_handler(msg, handle_one_student, i, length_of_array_students)
