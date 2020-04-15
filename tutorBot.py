@@ -34,8 +34,8 @@ def check_is_tutor_and_return_id_of_they(username):
 @bot.message_handler(commands=['help'])
 def help_handler(message):
     user_name = message.from_user.first_name
-    help_message = 'Рады преветствовать вас, {}!\n Для того чтобы начать, пожалуйста,' \
-                   'введите команду /start'.format(user_name)
+    help_message = 'Рады преветствовать вас, {}!\nДля того чтобы начать, пожалуйста,' \
+                   ' введите команду /start'.format(user_name)
 
     bot.send_message(message.chat.id, help_message)
 
@@ -72,8 +72,8 @@ def start_handler(message):
         bot.register_next_step_handler(msg, handle_group)
 
     else:
-        bot.send_message(message.chat.id, "Извините, но вы не преподователь. У вас нет прав"
-                                          "на редактирование журнала. Вы можете только"
+        bot.send_message(message.chat.id, "Извините, но вы не преподаватель. У вас нет прав"
+                                          " на редактирование журнала. Вы можете только"
                                           " просматривать его на сайте www.site.com")
 
 
