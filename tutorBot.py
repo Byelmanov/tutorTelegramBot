@@ -94,7 +94,7 @@ def handle_group(message):
     SELECT title, type FROM subjects
     INNER JOIN group_subject ON subjects.id = group_subject.subject_id
     WHERE group_subject.group_id = {} AND group_subject.tutor_id = {};
-    """.format(group_id[0], 6) # TODO how to pass tutor id here?
+    """.format(group_id[0], data_obj.tutor_id)
     cursor.execute(sql_to_get_subjects)
 
     array_of_subjects = cursor.fetchall()
@@ -120,7 +120,7 @@ def handle_subject(message):
     sql_to_get_students = """
     SELECT id, lastname, firstname FROM students
     WHERE group_id = {};
-    """.format(1) # TODO how to pass group_id here?
+    """.format(data_obj.group_id)
     cursor.execute(sql_to_get_students)
     array_of_students = cursor.fetchall()
 
