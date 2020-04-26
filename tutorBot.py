@@ -108,11 +108,12 @@ try:
         # test it, I'm not sure that it must work - [0][0]
         data_obj.group_id = group_id[0][0]
 
+
         sql_to_get_subjects = """
         SELECT title, type FROM subjects
         INNER JOIN group_subject ON subjects.id = group_subject.subject_id
         WHERE group_subject.group_id = {} AND group_subject.tutor_id = {};
-        """.format(group_id[0], data_obj.tutor_id)
+        """.format(data_obj.group_id, data_obj.tutor_id)
 
         array_of_subjects = wrap_cursor_execute(sql_to_get_subjects)
 
