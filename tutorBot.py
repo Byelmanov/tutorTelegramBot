@@ -6,8 +6,10 @@ import pymysql
 from datetime import datetime
 
 bot = telebot.TeleBot("928244332:AAFXeSpQSVauw_3Efi6P_oiLkdcxjz7QK-Y")
+DB = None
 
 try:
+    global DB
     DB = pymysql.connect('localhost', 'root', '', 'unnamed')
     cursor = DB.cursor()
 
