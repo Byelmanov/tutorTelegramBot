@@ -24,8 +24,8 @@ try:
 
 
     def wrap_cursor_execute(sql):
+        global DB
         if not DB.open:
-            global DB
             DB = pymysql.connect('localhost', 'root', '', 'unnamed')
 
         row_count = cursor.execute(sql)
