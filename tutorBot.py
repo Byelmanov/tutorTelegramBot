@@ -141,7 +141,9 @@ try:
 
         sql_to_get_students = """
         SELECT id, lastname, firstname FROM students
-        WHERE group_id = {};
+        WHERE group_id = {}
+        ORDER BY lastname
+        COLLATE  utf8_unicode_ci;
         """.format(data_obj.group_id)
 
         array_of_students = wrap_cursor_execute(sql_to_get_students)
