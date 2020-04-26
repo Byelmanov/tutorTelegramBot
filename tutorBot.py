@@ -20,7 +20,6 @@ try:
 
     data_obj = DataCurrSession()
 
-
     def wrap_cursor_execute(sql):
         if not DB.open:
             global DB
