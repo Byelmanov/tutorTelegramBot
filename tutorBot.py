@@ -6,13 +6,10 @@ import pymysql
 from datetime import datetime
 
 bot = telebot.TeleBot("928244332:AAFXeSpQSVauw_3Efi6P_oiLkdcxjz7QK-Y")
-DB = None
+DB = pymysql.connect('localhost', 'root', '', 'unnamed')
 
 try:
-    global DB
-    DB = pymysql.connect('localhost', 'root', '', 'unnamed')
     cursor = DB.cursor()
-
 
     class DataCurrSession:
         group_id = 0
@@ -166,8 +163,8 @@ try:
                                current_data_string, current_data_string)
 
                     try:
+                        global DB
                         if not DB.open():
-                            global DB
                             DB = pymysql.connect('localhost', 'root', '', 'unnamed')
 
                         cursor.execute(sql_to_insert_to_journal)
@@ -203,8 +200,6 @@ except:
 
 finally:
     bot.polling()
-
-    global DB
     DB.close()
 
 
