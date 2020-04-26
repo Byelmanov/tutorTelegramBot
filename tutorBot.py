@@ -5,6 +5,8 @@ from telebot import types
 import pymysql
 from datetime import datetime
 
+import traceback
+
 bot = telebot.TeleBot("928244332:AAFXeSpQSVauw_3Efi6P_oiLkdcxjz7QK-Y")
 DB = pymysql.connect('localhost', 'root', '', 'unnamed')
 
@@ -155,9 +157,9 @@ try:
 
                 def handle_one_student(message, i, length):
 
-                    answer = True if (message.text == 'Есть') else False
+                    answer = 1 if (message.text == 'Есть') else 0
 
-                    current_data_string = datetime.now().strftime("%Y:%m:%d %H:%M:%S")
+                    current_data_string = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
                     sql_to_insert_to_journal = """
                     INSERT INTO journals (student_id, subject_id, value, created_at, updated_at)
@@ -165,15 +167,18 @@ try:
                     """.format(data_obj.curr_student_id, data_obj.subject_id, answer,
                                current_data_string, current_data_string)
 
+
+
                     try:
                         global DB
-                        if not DB.open():
+                        if not DB.open:
                             DB = pymysql.connect('localhost', 'root', '', 'unnamed')
 
                         cursor.execute(sql_to_insert_to_journal)
                         DB.commit()
-                    except:
+                    except Exception as e:
                         DB.rollback()
+                        print(traceback.format_exc())
 
                     if(i < length - 1):
                         i += 1
