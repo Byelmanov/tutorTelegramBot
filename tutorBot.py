@@ -61,7 +61,7 @@ try:
         :return: false if current user not tutor
                 tutor telegram login if tutor exist
         """
-        usernames_from_DB = wrap_cursor_execute('SELECT * FROM tutors_tg')
+        usernames_from_DB = wrap_cursor_execute('SELECT user_id, telegram FROM tutors')
 
         if usernames_from_DB == None:
             return False
@@ -101,10 +101,10 @@ try:
 
             sql_to_get_groups = """
                 SELECT groups.id, groups.title
-                FROM tutors_tg
-                INNER JOIN group_subject ON tutors_tg.user_id = group_subject.tutor_id
+                FROM tutors
+                INNER JOIN group_subject ON tutors.user_id = group_subject.tutor_id
                 INNER JOIN groups ON group_subject.group_id = groups.id
-                WHERE tutors_tg.user_id = {};
+                WHERE tutors.user_id = {};
             """.format(tutor_id)
 
             # get array of groups of current tutor
