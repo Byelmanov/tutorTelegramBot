@@ -27,6 +27,7 @@ try:
         subject_id = 0
         tutor_id = 0
         curr_student_id = 0
+        column_id = 0
 
     # object of this class
     data_obj = DataCurrSession()
@@ -42,8 +43,11 @@ try:
                                         else None
         """
         global DB
+        global cursor
         if not DB.open:
             DB = pymysql.connect('localhost', 'root', '', 'unnamed')
+            cursor = DB.cursor()
+
 
         row_count = cursor.execute(sql)
         if (row_count == 0):
@@ -149,8 +153,9 @@ try:
         data_obj.group_id = group_id[0][0]
 
         sql_to_get_subjects = """
-        SELECT title, type FROM subjects
-        INNER JOIN group_subject ON subjects.id = group_subject.subject_id
+        SELECT s.title, st.short FROM subjects AS s
+        INNER JOIN group_subject ON s.id = group_subject.subject_id
+        INNER JOIN subject_types AS st on s.type_id = st.id
         WHERE group_subject.group_id = {} AND group_subject.tutor_id = {};
         """.format(data_obj.group_id, data_obj.tutor_id)
 
@@ -174,8 +179,9 @@ try:
 
     def handle_subject(message):
         sql_to_get_subject_id = """
-        SELECT id FROM subjects
-        WHERE CONCAT(title, ' (', type, ')') = '{}';
+        SELECT s.id FROM subjects AS s
+        INNER JOIN subject_types AS st ON s.type_id = st.id
+        WHERE CONCAT(s.title, ' (', st.short, ')') = '{}';
         """.format(message.text)
 
         # get subject id to store it in data_obj
@@ -217,14 +223,14 @@ try:
                     """
 
                     # convert answer 'Есть', "Нету" into bool to send in DB
-                    answer = 1 if (message.text == 'Есть') else 0
+                    answer = 0 if (message.text == 'Есть') else 'null'
 
                     current_data_string = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
                     sql_to_insert_to_journal = """
-                    INSERT INTO journals (student_id, subject_id, value, created_at, updated_at)
+                    INSERT INTO journal_records (student_id, column_id, value, created_at, updated_at)
                     VALUES ({}, {}, {}, '{}', '{}')
-                    """.format(data_obj.curr_student_id, data_obj.subject_id, answer,
+                    """.format(data_obj.curr_student_id, data_obj.column_id, answer,
                                current_data_string, current_data_string)
 
                     # try to write data into DB
@@ -274,6 +280,13 @@ try:
                 # be continued while i < length of array of students
                 bot.register_next_step_handler(msg, handle_one_student, i, length_of_array_students)
 
+            date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            wrap_cursor_execute("""
+                insert into journal_columns (group_id, subject_id, created_at, updated_at)
+                values ({}, {}, '{}', '{}')
+                """.format(data_obj.group_id, data_obj.subject_id, date, date)
+            )
+            data_obj.column_id = cursor.lastrowid
             launch_students(message, 0)
 
 except:
