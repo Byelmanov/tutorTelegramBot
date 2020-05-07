@@ -251,6 +251,8 @@ try:
                     if(i < length - 1):
                         i += 1
                         launch_students(message, i)
+                    else:
+                        bot.send_message(message.chat.id, 'Перекличка завершена', reply_markup=types.ReplyKeyboardRemove())
 
 
                 length_of_array_students = len(array_of_students)
