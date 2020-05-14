@@ -13,8 +13,7 @@ import traceback
 
 # create a bot using our token
 bot = telebot.TeleBot("928244332:AAFXeSpQSVauw_3Efi6P_oiLkdcxjz7QK-Y")
-# connect to DB
-DB = pymysql.connect('localhost', 'root', '', 'unnamed')
+DB = pymysql.connect('localhost', 'root', 'mysqlpass', 'unnamed')
 
 # all code in try-except because if error we need bot to continue running
 try:
@@ -108,7 +107,8 @@ try:
                 FROM tutors
                 INNER JOIN group_subject ON tutors.user_id = group_subject.tutor_id
                 INNER JOIN groups ON group_subject.group_id = groups.id
-                WHERE tutors.user_id = {};
+                WHERE tutors.user_id = {}
+		GROUP BY group_subject.group_id;
             """.format(tutor_id)
 
             # get array of groups of current tutor
